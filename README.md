@@ -2,10 +2,10 @@
 > Real-Time Location of all [CARTA](https://www.gocarta.org/) Buses and Shuttles
 
 ## background
-Every second counts when you are trying to catch the bus.  We built this data pipeline to provide real-time data to both our operations center and the public.
+Every second counts when you are trying to catch the bus.  We built this data pipeline in our cloud environment to provide real-time data to both our operations center and the public.
 
 ## frequency
-The pipeline runs approximately every 5 seconds.
+The pipeline runs approximately every 5 seconds on a cloud server.
 
 ## columns
 | column | example | description |
