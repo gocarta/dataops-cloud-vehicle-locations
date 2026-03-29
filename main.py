@@ -17,6 +17,8 @@ from boto3.dynamodb.conditions import Key, Attr
 
 from zoneinfo import ZoneInfo
 
+start_time = time.perf_counter()
+
 AWS_DYNAMODB_TABLE_NAME = se.get("AWS_DYNAMODB_TABLE_NAME")
 DATAOPS_TIMEZONE = se.get("DATAOPS_TIMEZONE")
 AWS_BUCKET_NAME = se.get("AWS_BUCKET_NAME")
@@ -36,9 +38,8 @@ table = dynamodb.Table(AWS_DYNAMODB_TABLE_NAME)
 
 while True:
     try:
+        print("sleeping 5 seconds")
         time.sleep(5)
-
-        start_time = time.perf_counter()
 
         rows = []
 
@@ -96,11 +97,14 @@ while True:
             xlsx=True,
         )
 
+        print(f"[dataops-cloud-vehicle-locations] updated {len(rows)} rows")
+
         end_time = time.perf_counter()
         execution_time = end_time - start_time
         print("execution_time:", execution_time)
-
-        print(f"[dataops-cloud-vehicle-locations] updated {len(rows)} rows")
+        if execution_time >= 60:
+            print("time is up")
+            exit()
 
     except Exception as e:
         print(e)
