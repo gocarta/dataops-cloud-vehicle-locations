@@ -35,7 +35,6 @@ dynamodb = boto3.resource("dynamodb", region_name=AWS_DYNAMODB_REGION)
 table = dynamodb.Table(AWS_DYNAMODB_TABLE_NAME)
 
 while True:
-
     try:
         time.sleep(5)
 
@@ -74,21 +73,14 @@ while True:
             if reported_utc > (received_utc + timedelta(minutes=1)):
                 reported_utc -= timedelta(days=1)
 
-            now_utc = datetime.now(ZoneInfo("UTC"))
-            threshold = timedelta(minutes=5)
-
-            age = (now_utc - reported_utc).total_seconds()
-
             row = {
                 "vehicle_id": vehicle_id,
                 "latitude": float(item["latitude"]),
                 "longitude": float(item["longitude"]),
                 "reported": reported_utc.astimezone(timezone).isoformat(),
-                "age": int(age),
             }
 
             rows.append(row)
-
 
         client = datablob.DataBlobClient(
             bucket_name=AWS_BUCKET_NAME, bucket_path=AWS_BUCKET_PATH
