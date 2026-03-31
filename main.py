@@ -26,6 +26,9 @@ AWS_BUCKET_PATH = se.get("AWS_BUCKET_PATH")
 AWS_DYNAMODB_REGION = se.get("AWS_DYNAMODB_REGION")
 DATAOPS_QUICK_MODE = se.get("DATAOPS_QUICK_MODE")
 
+# make sure we don't run faster than 1 second per loop
+MIN_ITERATION_TIME = 1
+
 timezone = ZoneInfo(DATAOPS_TIMEZONE)
 timezone_utc = ZoneInfo("UTC")
 
@@ -38,7 +41,7 @@ table = dynamodb.Table(AWS_DYNAMODB_TABLE_NAME)
 
 while True:
     try:
-        time.sleep(0.25)
+        start_iteration_time = time.perf_counter()
 
         rows = []
 
@@ -107,6 +110,11 @@ while True:
         print(f"[dataops-cloud-vehicle-locations] updated {len(rows)} rows")
 
         end_time = time.perf_counter()
+        iteration_time = end_time - start_iteration_time
+
+        if iteration_time < MIN_ITERATION_TIME:
+            time.sleep(MIN_ITERATION_TIME - iteration_time)
+
         execution_time = end_time - start_time
         print("execution_time:", execution_time)
         if execution_time >= 60:
