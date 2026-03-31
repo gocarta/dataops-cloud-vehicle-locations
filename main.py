@@ -26,8 +26,8 @@ AWS_BUCKET_PATH = se.get("AWS_BUCKET_PATH")
 AWS_DYNAMODB_REGION = se.get("AWS_DYNAMODB_REGION")
 DATAOPS_QUICK_MODE = se.get("DATAOPS_QUICK_MODE")
 
-# make sure we don't run faster than 1 second per loop
-MIN_ITERATION_TIME = 1
+# make sure we don't run faster than 0.5 seconds per loop
+MIN_ITERATION_TIME = 0.5
 
 timezone = ZoneInfo(DATAOPS_TIMEZONE)
 timezone_utc = ZoneInfo("UTC")
