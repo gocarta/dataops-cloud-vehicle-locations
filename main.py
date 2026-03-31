@@ -25,9 +25,7 @@ AWS_BUCKET_NAME = se.get("AWS_BUCKET_NAME")
 AWS_BUCKET_PATH = se.get("AWS_BUCKET_PATH")
 AWS_DYNAMODB_REGION = se.get("AWS_DYNAMODB_REGION")
 DATAOPS_QUICK_MODE = se.get("DATAOPS_QUICK_MODE")
-
-# make sure we don't run faster than 0.5 seconds per loop
-MIN_ITERATION_TIME = 0.5
+DATAOPS_MIN_ITERATION_TIME = float(se.get("DATAOPS_MIN_ITERATION_TIME"))
 
 timezone = ZoneInfo(DATAOPS_TIMEZONE)
 timezone_utc = ZoneInfo("UTC")
@@ -112,8 +110,8 @@ while True:
         end_time = time.perf_counter()
         iteration_time = end_time - start_iteration_time
 
-        if iteration_time < MIN_ITERATION_TIME:
-            time.sleep(MIN_ITERATION_TIME - iteration_time)
+        if iteration_time < DATAOPS_MIN_ITERATION_TIME:
+            time.sleep(DATAOPS_MIN_ITERATION_TIME - iteration_time)
 
         execution_time = end_time - start_time
         print("execution_time:", execution_time)
