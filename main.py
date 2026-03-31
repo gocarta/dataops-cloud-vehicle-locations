@@ -38,6 +38,8 @@ table = dynamodb.Table(AWS_DYNAMODB_TABLE_NAME)
 
 while True:
     try:
+        time.sleep(0.25)
+
         rows = []
 
         for vehicle_id, vid in vehicle_ids:
