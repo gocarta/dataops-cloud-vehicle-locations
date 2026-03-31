@@ -24,6 +24,7 @@ DATAOPS_TIMEZONE = se.get("DATAOPS_TIMEZONE")
 AWS_BUCKET_NAME = se.get("AWS_BUCKET_NAME")
 AWS_BUCKET_PATH = se.get("AWS_BUCKET_PATH")
 AWS_DYNAMODB_REGION = se.get("AWS_DYNAMODB_REGION")
+DATAOPS_QUICK_MODE = se.get("DATAOPS_QUICK_MODE")
 
 timezone = ZoneInfo(DATAOPS_TIMEZONE)
 timezone_utc = ZoneInfo("UTC")
@@ -31,16 +32,12 @@ timezone_utc = ZoneInfo("UTC")
 VEHICLE_IDS = list(sorted(se.get("VEHICLE_IDS").strip().split(",")))
 
 vehicle_ids = [(vid, vid.strip().zfill(4)) for vid in VEHICLE_IDS]
-print("vehicle_ids:", vehicle_ids)
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_DYNAMODB_REGION)
 table = dynamodb.Table(AWS_DYNAMODB_TABLE_NAME)
 
 while True:
     try:
-        print("sleeping 5 seconds")
-        time.sleep(5)
-
         rows = []
 
         for vehicle_id, vid in vehicle_ids:
@@ -87,15 +84,23 @@ while True:
             bucket_name=AWS_BUCKET_NAME, bucket_path=AWS_BUCKET_PATH
         )
 
-        client.update_dataset(
-            name="cloud_vehicle_locations",
-            version="1",
-            data=rows,
-            description="Real-Time Location of CARTA Fixed-Route Buses and Shuttles.  Each vehicle sends its location via TAIP message every 5 seconds to AWS.",
-            latitude_key="latitude",
-            longitude_key="longitude",
-            xlsx=True,
-        )
+        if DATAOPS_QUICK_MODE == True:
+            # do a quick geojson upload
+            geojson = client.convert_rows_to_geojson_points(
+                rows, longitude_key="longitude", latitude_key="latitude"
+            )
+            client.upload_geojson_points("cloud_vehicle_locations", "1", geojson)
+        else:
+            # do a full upload, including metadata
+            client.update_dataset(
+                name="cloud_vehicle_locations",
+                version="1",
+                data=rows,
+                description="Real-Time Location of CARTA Fixed-Route Buses and Shuttles.",
+                latitude_key="latitude",
+                longitude_key="longitude",
+                xlsx=False,
+            )
 
         print(f"[dataops-cloud-vehicle-locations] updated {len(rows)} rows")
 
