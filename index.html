@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Real-Time Location of Buses and Shuttles</title>
+        <meta charset='utf-8' />
+        <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+        <script src="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.js"></script>
+        <link href="https://unpkg.com/maplibre-gl@^4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+
+        <!-- font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+        <style>
+            * {
+                font-family: "Inter", sans-serif;
+                font-optical-sizing: auto;
+                font-style: normal;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .maplibregl-popup-content {
+                white-space: pre-line;
+            }
+
+            #app {
+                bottom: 0;
+                left: 0;
+                right: 0;
+                position: absolute;
+                top: 0;
+            }
+            #map {
+                bottom: 30px;
+                left: 0;
+                right: 0;
+                position: absolute;
+                top: 56px;                
+            }
+
+            #footer {
+                background: #004360;
+                bottom: 0;
+                height: 30px;
+                position: absolute;
+                width: 100%;
+                z-index: 99;
+            }
+
+            #footer-text {
+                color: lightgray;
+                left: 10px;
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            #header {
+                background-color: #00D3EB;
+                display: block;
+                height: 56px;
+                position: relative;
+                width: 100%;
+                z-index: 99;
+            }
+
+            #header #text {
+                /* font-size: 16px;
+                font-weight: 400;
+                letter-spacing: .32px; */
+
+
+                left: 25px;
+                position: absolute;
+                color: whitesmoke;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            #pagename {
+                display: inline-block;
+                font-size: 26px;
+                font-weight: bold;
+            }
+
+            @media screen and (max-width: 800px) {
+                #footer {
+                    font-size: 12px;
+                }
+                #header #text {
+                    left: 15px;
+                }
+            }
+
+            .marker {
+                border: 2px solid #004360;
+                /* background: #00A3BD; */
+                border-radius: 26px;
+                cursor: pointer;
+                height: 26px;
+                text-align: center;
+                width: 26px;
+            }
+            .marker:hover {
+                height: 32px;
+                width: 32px;
+            }
+            .marker-inner {
+                background: #00A3BD;
+                border-radius: 25px;
+                height: 25px;
+                left: 50%;
+                position: absolute;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                width: 25px;
+            }
+            .marker-inner-text {
+                left: 50%;
+                position: absolute;
+                transform: translate(-50%, -50%);
+                top: 50%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div id="header">
+                <div id="text">
+                    <div id="pagename">Real-Time Location of Buses and Shuttles</div>
+                </div>
+            </div>
+            <div id="map"></div>
+            <div id="footer">
+                <div id="footer-text">
+                    Built by CARTA with MapLibreGL.
+                </div>
+            </div>
+        </div>
+        <script>            
+            var mapOptions = {
+                container: 'map', // container id
+                // Define the map syle (OpenStreetMap raster tiles)
+                style: "https://api.maptiler.com/maps/streets-v2-light/style.json?key=mYniYTe7rfEM5jAFdfKy",
+                center: [-85.310947, 35.055666], // starting position [lng, lat]
+                zoom: 11 // starting zoom
+            };
+
+            // zoom out more if on mobile
+            if (window.innerWidth < 800) {
+                mapOptions.zoom = 9;
+                mapOptions.attributionControl = false;
+            }
+
+            var map = new maplibregl.Map(mapOptions);
+
+            if (window.innerWidth < 800) {
+                map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+            }
+
+            async function update_layer () {
+                const layer_url = "https://gocarta.s3.us-east-2.amazonaws.com/public/data/cloud_vehicle_locations/v1/data.points.geojson";
+                const layer_id = "cloud-vehicle-locations";
+
+                const res = await fetch(layer_url);
+                const geojson = await res.json();
+
+                let source = map.getSource(layer_url);
+                if (source) {
+                    source.setData(geojson);
+                } else {
+                    map.addSource(layer_url, { 'type': 'geojson', 'data': geojson });
+                }
+
+                if (!map.getLayer(layer_id)) {
+                    map.addLayer({
+                        'id': layer_id,
+                        'type': 'circle',
+                        'source': layer_url,
+                        'layout': {
+                        },
+                        'paint': {
+                            'circle-color': ['coalesce', ['get', 'color'], '#007cbf'],
+                            'circle-radius': 6,
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color':  '#004',
+                            'circle-opacity': 0.5,    
+                        }
+                    });
+                    map.on('click', layer_id, (e) => {
+                        const coordinates = e.features[0].geometry.coordinates.slice();
+                        const props = e.features[0].properties;
+                        const description = [
+                            "vehicle_id:\n " + props.vehicle_id,
+                            "latitude:\n" + props.latitude,
+                            "longitude:\n" + props.longitude,
+                            "reported:\n" + props.reported
+                        ].join("\n\n");
+
+                        new maplibregl.Popup()
+                            .setLngLat(coordinates)
+                            .setText(description)
+                            .addTo(map);
+                    });
+                }
+            }
+
+            map.on('load', () => {
+                update_layer();
+
+                setInterval(function () {
+                    update_layer();
+                }, 1000);
+            });
+        </script>
+    </body>
+</html>
