@@ -1,11 +1,14 @@
 # dataops-cloud-vehicle-locations
 > Real-Time Location of all [CARTA](https://www.gocarta.org/) Buses and Shuttles
 
+## live demo
+https://gocarta.github.io/dataops-cloud-vehicle-locations/
+
 ## background
 Every second counts when you are trying to catch the bus.  We built this data pipeline in our cloud environment to provide real-time data to both our operations center and the public.
 
 ## frequency
-The pipeline runs approximately every 5 seconds on a cloud server.
+The pipeline runs approximately every 500 milliseconds on a cloud server.
 
 ## columns
 | column | example | description |
