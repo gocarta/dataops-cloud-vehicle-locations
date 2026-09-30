@@ -170,6 +170,11 @@
                 const res = await fetch(layer_url);
                 const geojson = await res.json();
 
+                if (location.href.includes("vehicle_ids=")) {
+                    const vehicle_ids = new URLSearchParams(location.search).get("vehicle_ids").split(",");
+                    geojson.features = geojson.features.filter(it => vehicle_ids.includes(it.properties.vehicle_id));
+                }
+
                 let source = map.getSource(layer_url);
                 if (source) {
                     source.setData(geojson);
